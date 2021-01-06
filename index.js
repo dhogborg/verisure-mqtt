@@ -29,8 +29,10 @@ if (flagDebug) {
 }
 
 var mqttClient = mqtt.connect(`mqtt://${config.mqttBrokerHost}:${config.mqttBrokerPort}`);
+var mqttConnected = false;
 
 mqttClient.on('connect', function () {
+    mqttConnected = true;
     mqttClient.subscribe(
         `${config.mqttRootTopic}/status/services/verisure-to-mqtt-bridge`,
         function (err) {
@@ -82,71 +84,78 @@ function getVerisure() {
                 // Alarm state compatible
                 mqttClient.publish(
                     `${config.mqttRootTopic}/${verisure_prefix}/tele/armstateCompatible/STATE`,
-                    overview.armstateCompatible.toString(),
+                    overview.armstateCompatible ? 'true' : 'false',
                 );
 
                 // Control plugs
-                overview.controlPlugs.forEach(controlPlug => {
-                    mqttClient.publish(
-                        `${config.mqttRootTopic}/${verisure_prefix}/tele/controlPlug/STATE`,
-                        JSON.stringify(controlPlug),
-                    );
-                });
+                if (overview.controlPlugs)
+                    overview.controlPlugs.forEach(controlPlug => {
+                        mqttClient.publish(
+                            `${config.mqttRootTopic}/${verisure_prefix}/tele/controlPlug/STATE`,
+                            JSON.stringify(controlPlug),
+                        );
+                    });
 
                 // Smart plugs
-                overview.smartPlugs.forEach(smartPlug => {
-                    mqttClient.publish(
-                        `${config.mqttRootTopic}/${verisure_prefix}/tele/smartPlug/STATE`,
-                        JSON.stringify(smartPlug),
-                    );
-                });
+                if (overview.smartPlugs)
+                    overview.smartPlugs.forEach(smartPlug => {
+                        mqttClient.publish(
+                            `${config.mqttRootTopic}/${verisure_prefix}/tele/smartPlug/STATE`,
+                            JSON.stringify(smartPlug),
+                        );
+                    });
 
                 // Door locks
-                overview.doorLockStatusList.forEach(doorLock => {
-                    mqttClient.publish(
-                        `${config.mqttRootTopic}/${verisure_prefix}/tele/doorLock/STATE`,
-                        JSON.stringify(doorLock),
-                    );
-                });
+                if (overview.doorLockStatusList)
+                    overview.doorLockStatusList.forEach(doorLock => {
+                        mqttClient.publish(
+                            `${config.mqttRootTopic}/${verisure_prefix}/tele/doorLock/STATE`,
+                            JSON.stringify(doorLock),
+                        );
+                    });
 
                 // SMS count
-                mqttClient.publish(
-                    `${config.mqttRootTopic}/${verisure_prefix}/tele/totalSmsCount/STATE`,
-                    overview.totalSmsCount.toString(),
-                );
+                if (overview.totalSmsCount)
+                    mqttClient.publish(
+                        `${config.mqttRootTopic}/${verisure_prefix}/tele/totalSmsCount/STATE`,
+                        overview.totalSmsCount.toString(),
+                    );
 
                 // Environmental values
-                overview.climateValues.forEach(climateValue => {
-                    mqttClient.publish(
-                        `${config.mqttRootTopic}/${verisure_prefix}/tele/${climateValue.deviceArea}/SENSOR`,
-                        JSON.stringify(climateValue),
-                    );
-                });
+                if (overview.climateValues)
+                    overview.climateValues.forEach(climateValue => {
+                        mqttClient.publish(
+                            `${config.mqttRootTopic}/${verisure_prefix}/tele/${climateValue.deviceArea}/SENSOR`,
+                            JSON.stringify(climateValue),
+                        );
+                    });
 
                 // Error list
-                overview.installationErrorList.forEach(installationError => {
-                    mqttClient.publish(
-                        `${config.mqttRootTopic}/${verisure_prefix}/tele/${installationError.area}/STATE`,
-                        JSON.stringify(installationError),
-                    );
-                });
+                if (overview.installationErrorList)
+                    overview.installationErrorList.forEach(installationError => {
+                        mqttClient.publish(
+                            `${config.mqttRootTopic}/${verisure_prefix}/tele/${installationError.area}/STATE`,
+                            JSON.stringify(installationError),
+                        );
+                    });
 
                 // Pending changes
-                mqttClient.publish(
-                    `${config.mqttRootTopic}/${verisure_prefix}/tele/pendingChanges/STATE`,
-                    overview.pendingChanges.toString(),
-                );
+                if (overview.pendingChanges)
+                    mqttClient.publish(
+                        `${config.mqttRootTopic}/${verisure_prefix}/tele/pendingChanges/STATE`,
+                        overview.pendingChanges.toString(),
+                    );
 
                 // Ethernet mode active
                 mqttClient.publish(
                     `${config.mqttRootTopic}/${verisure_prefix}/tele/ethernetModeActive/STATE`,
-                    overview.ethernetModeActive.toString(),
+                    overview.ethernetModeActive ? 'true' : 'false',
                 );
 
                 // Ethernet connected now
                 mqttClient.publish(
                     `${config.mqttRootTopic}/${verisure_prefix}/tele/ethernetConnectedNow/STATE`,
-                    overview.ethernetConnectedNow.toString(),
+                    overview.ethernetConnectedNow ? 'true' : 'false',
                 );
 
                 // Heat pumps
@@ -171,35 +180,39 @@ function getVerisure() {
                 );
 
                 // User tracking status
-                mqttClient.publish(
-                    `${config.mqttRootTopic}/${verisure_prefix}/tele/userTrackingStatus/STATE`,
-                    overview.userTracking.installationStatus.toString(),
-                );
+                if (overview.userTracking && overview.userTracking.installationStatus)
+                    mqttClient.publish(
+                        `${config.mqttRootTopic}/${verisure_prefix}/tele/userTrackingStatus/STATE`,
+                        overview.userTracking.installationStatus.toString(),
+                    );
 
                 // User tracking
-                overview.userTracking.users.forEach(user => {
-                    mqttClient.publish(
-                        `${config.mqttRootTopic}/${verisure_prefix}/tele/userTracking/STATE`,
-                        JSON.stringify(user),
-                    );
-                });
+                if (overview.userTracking && overview.userTracking.users)
+                    overview.userTracking.users.forEach(user => {
+                        mqttClient.publish(
+                            `${config.mqttRootTopic}/${verisure_prefix}/tele/userTracking/STATE`,
+                            JSON.stringify(user),
+                        );
+                    });
 
                 // Event counts
                 // TODO
 
                 // Door/window report state
-                mqttClient.publish(
-                    `${config.mqttRootTopic}/${verisure_prefix}/tele/doorWindowReportState/STATE`,
-                    overview.doorWindow.reportState.toString(),
-                );
+                if (overview.doorWindow && overview.doorWindow.reportState)
+                    mqttClient.publish(
+                        `${config.mqttRootTopic}/${verisure_prefix}/tele/doorWindowReportState/STATE`,
+                        overview.doorWindow.reportState.toString(),
+                    );
 
                 // Door/window devices
-                overview.doorWindow.doorWindowDevice.forEach(doorWindow => {
-                    mqttClient.publish(
-                        `${config.mqttRootTopic}/${verisure_prefix}/tele/doorWindow/STATE`,
-                        JSON.stringify(doorWindow),
-                    );
-                });
+                if (overview.doorWindow && overview.doorWindow.doorWindowDevice)
+                    overview.doorWindow.doorWindowDevice.forEach(doorWindow => {
+                        mqttClient.publish(
+                            `${config.mqttRootTopic}/${verisure_prefix}/tele/doorWindow/STATE`,
+                            JSON.stringify(doorWindow),
+                        );
+                    });
             })
             .catch(error => {
                 console.error('Error 1: ', error);
@@ -229,3 +242,17 @@ interval.onTimeout(function () {
     console.log('Timeout!');
     console.log('XXXXXXXXXXXXXXXXXXXXXXXX');
 });
+
+// retrieve data in start
+(async () => {
+    var tryInit = async () => {
+        if (mqttConnected) {
+            await getVerisure();
+            return;
+        }
+        setTimeout(() => {
+            tryInit();
+        }, 1000);
+    };
+    tryInit();
+})();
