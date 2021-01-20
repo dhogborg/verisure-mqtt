@@ -46,22 +46,17 @@ mqttClient.on('connect', function () {
     );
 });
 
-function wait(timeout) {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve();
-        }, timeout);
-    });
-}
+var verisure;
 
-function getVerisure() {
+async function getVerisure() {
     try {
-        const verisure = new Verisure(config.verisureUsername, config.verisurePwd);
+        if (!verisure) {
+            verisure = new Verisure(config.verisureUsername, config.verisurePwd);
+            await verisure.getToken();
+        }
+
         verisure
-            .getToken()
-            .then(() => {
-                return verisure.getInstallations();
-            })
+            .getInstallations()
             .then(installations => {
                 return installations[0].getOverview();
             })
@@ -216,9 +211,11 @@ function getVerisure() {
             })
             .catch(error => {
                 console.error('Error 1: ', error);
+                verisure = undefined;
             });
     } catch (err) {
         console.log('Error 2: ', err.message);
+        verisure = undefined;
     }
 }
 
